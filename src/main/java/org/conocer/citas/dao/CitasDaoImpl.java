@@ -57,7 +57,7 @@ public class CitasDaoImpl extends JdbcDaoSupport implements CitasDao {
                 "inner join c_horarios h on h.id = c.id_hora " +
                 "inner join c_medios_conocer m on m.id = c.id_medio " +
                 "inner join c_ocupacion_actual o on o.id = c.id_ocupacion " +
-                "inner join c_entidades e on e.id = c.id";
+                "inner join c_entidades e on e.id = c.id order by c.fecha asc";
         List<Map<String, Object>> rows =  getJdbcTemplate().queryForList(sql, new Object[]{});
         List<ResumenCitas> result = new ArrayList<ResumenCitas>();
         for(Map<String, Object> row:rows){
