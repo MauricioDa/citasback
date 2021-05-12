@@ -31,6 +31,7 @@ public class EventoController {
 
     @PostMapping(value = "/crearEvento", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public Response citas(@RequestBody CitasDto request) {
+        System.out.println("esta fecha es: " + request.getFecha());
         Response response = null;
         boolean existe = citasService.eventExists(request.getFecha(), request.getHorario());
         if (existe) {

@@ -10,10 +10,9 @@ import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Repository
 public class CitasDaoImpl extends JdbcDaoSupport implements CitasDao {
@@ -30,20 +29,27 @@ public class CitasDaoImpl extends JdbcDaoSupport implements CitasDao {
 
     @Override
     public void createCita(CitasDto request, String idMeet) {
-        String sql = "insert into k_citas (nombre, empresa, id_estado, id_ocupacion, id_medio, descripcion_solicitud,email, fecha, id_hora, id_meet) " +
-                "values (?,?,?,?,?,?,?,?,?,?)";
+
+        String sql = "insert into k_citas (nombre, empresa, id_estado, id_ocupacion, id_medio, descripcion_solicitud,email, fecha, id_hora, id_meet, fecha_registro) " +
+                "values (?,?,?,?,?,?,?,?,?,?,?)";
         getJdbcTemplate().update(sql, new Object[]{
                 request.getNombre(), request.getEmpresa(), request.getEntidad(), request.getOcupacion(), request.getMedio(), request.getDescripcion(), request.getEmail(),
-                request.getFecha(), request.getHorario(), idMeet});
+                sumarDiasAFecha(request.getFecha(),1), request.getHorario(), idMeet, new Date()});
+
 
     }
 
     @Override
     public boolean eventExist(Date fecha, String hora) {
+        Format formatter = new SimpleDateFormat("yyyy-MM-dd");
+        System.out.println("la fecha si existe es :" + fecha);
+        Date date2 = sumarDiasAFecha(fecha,1);
+        String date = formatter.format(date2);
+        System.out.println("la con formato mas un día es: " + date);
         String sql = "select count(h.id) from k_citas c " +
                 "right join c_horarios h on c.id_hora = h.id and c.fecha = ?" +
                 "where c.id_hora = ? ";
-        Integer existe = getJdbcTemplate().queryForObject(sql, new Object[]{fecha, hora}, Integer.class);
+        Integer existe = getJdbcTemplate().queryForObject(sql, new Object[]{date, hora}, Integer.class);
 
         return existe == 1 ? false : true;
     }
@@ -57,7 +63,7 @@ public class CitasDaoImpl extends JdbcDaoSupport implements CitasDao {
                 "inner join c_horarios h on h.id = c.id_hora " +
                 "inner join c_medios_conocer m on m.id = c.id_medio " +
                 "inner join c_ocupacion_actual o on o.id = c.id_ocupacion " +
-                "inner join c_entidades e on e.id = c.id order by c.fecha asc";
+                "inner join c_entidades e on e.id = c.id_estado order by c.fecha asc";
         List<Map<String, Object>> rows =  getJdbcTemplate().queryForList(sql, new Object[]{});
         List<ResumenCitas> result = new ArrayList<ResumenCitas>();
         for(Map<String, Object> row:rows){
@@ -79,5 +85,12 @@ public class CitasDaoImpl extends JdbcDaoSupport implements CitasDao {
         return result;
     }
 
+
+    public static Date sumarDiasAFecha(Date fecha, int dias){
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(fecha);
+        calendar.add(Calendar.DAY_OF_YEAR, dias);
+        return calendar.getTime();
+    }
 
 }
